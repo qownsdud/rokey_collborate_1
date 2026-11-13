@@ -1,0 +1,118 @@
+# ============================================================================
+# 프로젝트 파일 트리 & 일괄 이름 관리 (files.yaml)
+# ============================================================================
+# [사용 방법]
+# 1. 파일 이름 변경: `기존파일명:` 뒤에 `새파일명`을 입력하고 저장하세요.
+#    예) app.py: server.py
+# 2. 파일 이동: 상대 경로를 입력하세요. (예: app.py: src/server.py)
+# 3. 폴더 이름 변경: 해당 폴더 블록 안에 `_rename_dir: 새폴더명`을 추가하세요.
+#
+# [실행 명령어]
+# - 실시간 감시 & 트리 출력: python3 file_manager.py watch
+# - 변경 사항 수동 적용:     python3 file_manager.py apply
+# - 현재 트리만 보기:        python3 file_manager.py tree
+# - YAML 최신화:             python3 file_manager.py sync
+# ============================================================================
+
+tree:
+  .vscode:
+    settings.json:
+  manuals:
+    1_협동로봇_초급교육.pdf:
+    2_협동로봇_중급교육.pdf:
+    3_협동로봇_중급교육.pdf:
+    협동로봇_주의사항.pdf:
+  phase1_kiosk:
+    confirmed_outputs:
+      history:
+        lineart_20261113_153810.png:
+        lineart_20261113_160043.png:
+        lineart_20261113_160322.png:
+        lineart_20261113_160442.png:
+        lineart_20261113_160640_506229.png:
+      latest_lineart.png:
+    static:
+      app.js:
+      index.html:
+      style.css:
+    preprocess.py:
+    server.py:
+  phase2_lib_lineart:
+    outputs:
+      person1_cv_canny.png:
+      person1_dl_smooth2_clean.png:
+    samples:
+      person1.jpg:
+    lineart_cv.py:
+    lineart_dl.py:
+    main.py:
+    requirements.txt:
+    utils.py:
+  phase3_path_planner:
+    outputs:
+      history:
+        latest_lineart_comparison.png:
+        latest_lineart_strokes_px.json:
+        latest_lineart_vector.png:
+        lineart_20261113_160322_comparison.png:
+        lineart_20261113_160322_strokes_px.json:
+        lineart_20261113_160322_vector.png:
+        person1_dl_smooth2_clean_comparison.png:
+        person1_dl_smooth2_clean_strokes_px.json:
+        person1_dl_smooth2_clean_vector.png:
+      latest_lineart_comparison.png:
+      latest_lineart_strokes_px.json:
+      latest_lineart_vector.png:
+    extractor.py:
+    main.py:
+    visualize.py:
+  specification:
+    1_ai_lineart_generation.txt:
+    2_vector_path_extraction.txt:
+    3_ros2_hardware_integration.txt:
+  X:
+    lineart_onetouch:
+      confirmed_outputs:
+        history:
+          lineart_20261113_154629.png:
+          lineart_20261113_154943.png:
+        latest_lineart.png:
+        latest_meta.json:
+        latest_onetouch_path.json:
+      static:
+        app.js:
+        index.html:
+        style.css:
+      onetouch.py:
+      preprocess.py:
+      server.py:
+    phase2_ai_lineart:
+      outputs:
+        hf_kontext_finepen.png:
+        style_1_fine_line.png:
+        style_2_contour.png:
+        style_3_continuous.png:
+        style_4_editorial.png:
+        style_art_minimal.png:
+        style_art_oneline.png:
+      samples:
+        cat_sketch.jpg:
+      .env:
+      .env.example:
+      .gitignore:
+      =0.0.9:
+      =1.0.0:
+      ai_client.py:
+      app.py:
+      config.py:
+      postprocess.py:
+      requirements.txt:
+      test_pipeline.py:
+    cobot_automation_proposal.html:
+  DSL기본.txt:
+  file_manager.py:
+  files.yaml:
+  project_self_feedback.jpg:
+  test_file_manager.py:
+  아이디어.txt:
+  전체_업무_파이프라인.txt:

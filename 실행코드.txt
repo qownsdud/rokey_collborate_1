@@ -1,0 +1,8 @@
+1. 서버 열기
+/home/qownsdud/Documents/rokey_collaborate_1/phase2_lib_lineart/.venv/bin/uvicorn   server:app --app-dir /home/qownsdud/Documents/rokey_collaborate_1/phase1_kiosk   --host 0.0.0.0 --port 8000
+
+2. 키오스크 열기
+http://localhost:8000/
+
+3. 벡터화 실행 (캘리브레이션 직전까지)
+python3 phase3_path_planner/main.py

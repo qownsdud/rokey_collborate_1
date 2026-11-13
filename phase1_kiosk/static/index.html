@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>카메라 라인아트 협동로봇 드로잉 키오스크</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-badge">CAMERA LINEART</span>
+      <div>
+        <h1>카메라 라인아트 드로잉 키오스크</h1>
+        <p class="subtitle">노트북 카메라로 촬영한 사진을 로봇 드로잉용 흑백 선화로 변환합니다</p>
+      </div>
+    </div>
+    <div class="health-group" id="healthGroup">
+      <span class="status-pill" id="dlStatusPill">로컬 DL 확인 중...</span>
+    </div>
+  </header>
+
+  <main class="kiosk-grid">
+    <!-- 좌측: 카메라 입력 패널 -->
+    <section class="panel input-panel">
+      <div class="toolbar">
+        <div class="tool-group">
+          <button type="button" class="tool-btn" id="btnStartCam">카메라 켜기</button>
+          <button type="button" class="tool-btn active" id="btnMirror">좌우 반전 ON</button>
+        </div>
+        <div class="tool-group">
+          <label class="file-upload-btn">
+            📁 사진 파일 선택
+            <input type="file" id="photoFileInput" accept="image/*" hidden />
+          </label>
+        </div>
+      </div>
+
+      <div class="camera-stage">
+        <video id="camVideo" autoplay playsinline muted></video>
+        <img id="capturedPreview" alt="촬영된 사진 미리보기" hidden />
+        <div class="cam-placeholder" id="camPlaceholder">
+          <p>📷 <strong>카메라 켜기</strong>를 누르거나 사진 파일을 선택하세요</p>
+          <small>브라우저 상단에서 카메라 권한을 허용해 주세요</small>
+        </div>
+        <div class="countdown-overlay" id="countdownOverlay" hidden>3</div>
+        <canvas id="captureCanvas" hidden></canvas>
+      </div>
+
+      <div class="cam-actions">
+        <button type="button" class="btn-secondary" id="btnCaptureNow" disabled>📸 즉시 촬영</button>
+        <button type="button" class="btn-secondary" id="btnCaptureTimer" disabled>⏱️ 3초 타이머 촬영</button>
+        <button type="button" class="btn-ghost" id="btnRetake" hidden>🔄 다시 찍기</button>
+      </div>
+
+      <!-- 선화 옵션 영역 -->
+      <div class="controls-box">
+        <div class="control-row">
+          <div class="label-between">
+            <label>사진 선화 디테일 수준</label>
+            <span class="hint">로컬 딥러닝 선화 (LineartDetector DL)</span>
+          </div>
+          <div class="detail-options" role="radiogroup" aria-label="선화 디테일 수준">
+            <label class="detail-card">
+              <input type="radio" name="dlDetail" value="high" />
+              <strong>세밀하게</strong>
+              <span>디테일·잔선 많이 살림</span>
+            </label>
+            <label class="detail-card">
+              <input type="radio" name="dlDetail" value="medium" checked />
+              <strong>표준 (추천)</strong>
+              <span>균형 잡힌 깔끔한 선화</span>
+            </label>
+            <label class="detail-card">
+              <input type="radio" name="dlDetail" value="low" />
+              <strong>단순하게</strong>
+              <span>굵은 주선 위주로 추출</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="control-row split">
+          <div>
+            <label for="paperSelect">드로잉 용지 규격</label>
+            <select id="paperSelect">
+              <option value="a4" selected>A4 (210 × 297 mm)</option>
+              <option value="postcard">엽서 Postcard (100 × 148 mm)</option>
+              <option value="square">정사각형 Square (1 : 1)</option>
+            </select>
+          </div>
+          <div class="submit-wrap">
+            <button type="button" class="btn-primary" id="btnGenerate">
+              ✨ 라인아트 생성하기
+            </button>
+          </div>
+        </div>
+
+        <div class="error-banner" id="errorBanner" hidden></div>
+      </div>
+    </section>
+
+    <!-- 우측: 결과 미리보기 패널 -->
+    <section class="panel output-panel">
+      <div class="output-header">
+        <h2>생성된 라인아트 미리보기</h2>
+        <span class="engine-badge" id="engineBadge" hidden>-</span>
+      </div>
+
+      <div class="result-stage">
+        <div class="result-empty" id="resultEmpty">
+          <div class="empty-icon">📷</div>
+          <p>왼쪽에서 노트북 카메라로 사진을 찍은 뒤<br /><strong>라인아트 생성하기</strong>를 눌러주세요.</p>
+        </div>
+        <img id="resultImage" alt="생성된 흑백 라인아트" hidden />
+        <div class="loading-overlay" id="loadingOverlay" hidden>
+          <div class="spinner"></div>
+          <p id="loadingText">로컬 딥러닝 모델로 선화를 추출하고 있습니다...</p>
+          <small id="loadingTimer">0.0초 경과</small>
+        </div>
+      </div>
+
+      <div class="meta-bar" id="metaBar" hidden>
+        <div class="meta-item"><span>소요 시간</span><strong id="metaTime">-</strong></div>
+        <div class="meta-item"><span>해상도</span><strong id="metaSize">-</strong></div>
+        <div class="meta-item"><span>선 픽셀 비율</span><strong id="metaBlack">-</strong></div>
+      </div>
+
+      <div class="output-actions">
+        <button type="button" class="btn-primary" id="btnConfirmSelect" disabled>✅ 사진 최종 선택</button>
+        <button type="button" class="btn-ghost" id="btnResetAll">🔄 처음부터 다시</button>
+      </div>
+
+      <div class="confirm-banner" id="confirmBanner" hidden></div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

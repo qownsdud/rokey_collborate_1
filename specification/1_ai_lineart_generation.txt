@@ -1,0 +1,64 @@
+[사양서 1] AI 라인아트 생성 파이프라인 (입력 → 라인아트 이미지)
+
+1. 목적
+키오스크에서 사용자가 입력한 러프 스케치(이미지)와 키워드 3개(텍스트)를 결합하여, 로봇팔이 그리기 적합한 깔끔한 흑백 라인아트 이미지를 생성한다.
+
+2. 입력 데이터 규격
+- 러프 스케치 이미지: 키오스크 터치스크린(캔버스 UI)에서 생성된 이미지
+  * 권장 해상도: 512x512 또는 1024x1024 (정사각형 비율 권장, 이후 A4/A5 등 종이 비율에 맞춰 패딩 또는 크롭)
+  * 배경: 순백색(#FFFFFF), 선: 검정색(#000000)
+- 키워드 3개 (텍스트): 예) ["고양이", "우주복", "웃는 모습"]
+  * 필요 시 간단한 번역/정제(한글 → 영어 프롬프트 변환)를 거쳐 이미지 생성 모델의 인식률 향상
+
+3. AI 모델 채택 옵션 비교
+(옵션 A) 클라우드 API 방식 (초기 프로토타입 및 소규모 키오스크 권장)
+- 활용 API: OpenAI Image API, Google Gemini 이미지 생성/편집 API, Replicate/Fal.ai (ControlNet API) 등
+- 장점:
+  * 제어 PC에 고성능 GPU가 필요 없음 (일반 노트북/미니PC로 구동 가능)
+  * 초기 구축 비용이 낮고 API 호출 1회당 수십 원 수준으로 원가 산정이 명확함
+- 단점:
+  * 인터넷 연결 필수, 외부 서버 장애 시 동작 불가
+
+(옵션 B) 로컬 AI 방식 (오프라인 환경 및 대량 운영 시 권장)
+- 활용 모델: Stable Diffusion (SD 1.5 / SDXL) + ControlNet (Scribble 또는 Lineart 모델)
+- 장점:
+  * 인터넷 없이 완전 오프라인 구동 가능
+  * 추가 API 과금 없음, ControlNet 가중치 조절을 통해 러프 스케치 구도 유지력이 매우 뛰어남
+- 단점:
+  * NVIDIA GPU 필요 (최소 VRAM 8GB 이상 권장, 예: RTX 3060/4060 이상)
+
+(옵션 C) 비-AI 영상처리 방식 (OpenCV Canny 엣지 검출 — 현재 우선 적용)
+- 활용 라이브러리/알고리즘: OpenCV (`cv2.bilateralFilter` + `cv2.Canny`)
+- 구현 위치: `phase2_lib_lineart/lineart_cv.py` (`LineartConverterCV`, `mode="canny"`)
+- 장점:
+  * GPU·인터넷·API 과금 없이 일반 CPU 환경에서 수십 ms 이내로 즉시 변환 가능
+  * 순수 흑(0)/백(255) 이진 엣지 출력으로 후속 벡터 경로 추출(`Phase 3`)과 궁합이 좋음
+- 단점/제약:
+  * AI 생성 모델이 아니므로 키워드 기반 신규 창작은 불가하며, 입력 이미지(사진/스케치)의 윤곽선만 추출함
+
+4. 프롬프트 엔지니어링 및 출력 안정화 전략
+사용자가 어떤 키워드를 입력하더라도 로봇이 그리기 좋은 이미지를 얻기 위해, 백엔드에서 시스템 프롬프트를 고정 결합한다.
+- 시스템 프롬프트 예시:
+  "minimalist black and white line art of {keyword1}, {keyword2}, {keyword3}, based on the input rough sketch. clean continuous single-weight black lines on a pure white background, coloring book style, no shading, no gradients, no hatching, low complexity."
+- 네거티브 프롬프트 예시 (로컬 모델 사용 시):
+  "shading, gray, shadow, gradient, complex background, crosshatching, photorealistic, blurry, thick filled areas"
+- 후처리 검증:
+  * 출력 이미지가 흑백이 아니거나 배경이 어두운 경우 자동 그레이스케일 변환 및 대비(Contrast) 보정·이진화(Thresholding) 적용
+  * 출력 이미지가 완전히 비어 있거나(전부 흰색) 손상되지 않았는지 픽셀 비율로 유효성 검사 수행
+  * 로봇팔 드로잉 용지(A4/A5 등) 비율에 맞게 패딩 또는 크롭 후 다음 단계(벡터 경로 추출)로 전달
+
+5. 예상 처리 시간 및 예외 처리
+- 생성 시간 목표: 3~10초 이내 (키오스크 대기 화면에 비동기 로딩 애니메이션/진행률 표시)
+- 예외 처리:
+  * 부적절한 키워드 필터링 (API 안전 필터 또는 금칙어 리스트 적용)
+  * 생성 실패/타임아웃 시 1회 자동 재시도 후 안내 팝업 출력 및 재입력 유도
+
+6. 옵션 A(클라우드 API) 구체적 구현 절차
+1) 백엔드 및 API 선정
+   - 제어 PC(노트북/미니PC)에 경량 백엔드(예: FastAPI) 구축, API 키는 `.env` 환경 변수로 분리 관리 및 인터넷 연결 헬스체크 적용
+   - 스케치 구도 유지가 최우선이면 Fal.ai / Replicate (ControlNet Scribble/Lineart), 한글 키워드 이해 및 연동 편의성이 우선이면 Google Gemini 또는 OpenAI Image API 채택
+2) 입력 데이터 정규화
+   - `Pillow` 또는 `OpenCV`로 캔버스 스케치를 512x512 또는 1024x1024 정사각형으로 리사이즈/패딩하고, 투명 배경(RGBA PNG)일 경우 알파 채널을 합성해 순백색(#FFFFFF) 배경 + 검정(#000000) 선으로 변환
+   - 키워드 3개 금칙어 검사 및 필요 시 영문 번역/정제
+3) API 호출·후처리 및 키오스크 UI 연동
+   - 시스템 프롬프트 고정 결합 후 타임아웃/1회 재시도 로직으로 호출 → 후처리(이진화·유효성 검사·용지 비율 맞춤) 수행 후 키오스크 UI에 대기/오류 상태 피드백

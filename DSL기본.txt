@@ -1,0 +1,14 @@
+move_joint(조인트 이동)
+move_task(linear)(선형 이동)
+move_circle(호를 따라 이동 가능)
+moveB(복합적 이동)
+sub, callsub
+digital_out_1_release(놓기)
+digital_out_2_grasp(잡기)
+set
+wait
+compliance(순응제어, 일정 이하의 힘에 저항하며 이동)
+force(힘제어, 일정한 힘을 유지하며 이동)
+	상대모드: 외력 값을 0으로 보정, 힘제어 정확성 향상
+	-> 상대모드 OFF: 타겟에 실제 작용 힘 = 설정값 + 외력
+	-> 상대모드 ON : 타겟에 실제 작용 힘 = 설정값
